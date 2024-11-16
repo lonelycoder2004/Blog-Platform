@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #01032b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        .input-container {
+            width: 100%;
+            margin: 15px 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="email"], input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 12px ; 
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        span {
+            text-align: left;
+            color: red;
+            font-size: 12px;
+            margin-left: 5px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #222ad1;
+            color: #fff;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #103154;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <form id="resetForm">
+        <h2>Reset Password</h2>
+        <div class="input-container">
+            <input type="email" placeholder="Email-id" id="email" onfocus="validate()" oninput="validate()">
+            <span id="emailSpan"></span>
+        </div>
+        <div class="input-container">
+            <input type="password" placeholder="New Password" id="newPassword" onfocus="validate()" oninput="validate()">
+            <span id="passwordSpan"></span>
+            <i class="fa-solid fa-eye-slash toggle-password" id="toggleNewPassword" onclick="togglePassword('newPassword', 'toggleNewPassword')"></i>
+        </div>
+        <div class="input-container">
+            <input type="password" placeholder="Confirm Password" id="confirmPassword" onfocus="validate()" oninput="validate()">
+            <span id="confirmSpan"></span>
+            <i class="fa-solid fa-eye-slash toggle-password" id="toggleConfirmPassword" onclick="togglePassword('confirmPassword', 'toggleConfirmPassword')"></i>
+        </div>
+        <button type="submit" id="resetButton" disabled>Reset Password</button>
+    </form>
+
+    <script>
+        document.getElementById("resetForm").addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const newPassword = document.getElementById("newPassword").value; // Change this to newPassword
+
+    const data = { email, password: newPassword }; // Send newPassword as password
+
+    const api = 'http://localhost:4000/user/reset'; // Update with your reset password API endpoint
+
+    fetch(api, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === true || data.status === 'true') {
+            alert("Password reset successful!");
+            window.location.href="loginnew.html";
+        } else {
+            alert("Password reset failed: " + data.msg);
+        }
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        alert("An error occurred. Please try again later.");
+    });
+});
+
+
+        function validate() {
+            const email = document.getElementById("email").value;
+            const newPassword = document.getElementById("newPassword").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+
+            const emailExp = /^([a-zA-Z0-9-_]+)\@([a-zA-Z]+)\.([a-zA-Z]{2,6})(\.[a-zA-Z]{2,5})?$/;
+            const passExp = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@_])[a-zA-Z0-9@_]{8,12}$/;
+
+            let isEmailValid = true;
+            let isPasswordValid = true;
+            let isConfirmPasswordValid = true;
+
+            if (email === "") {
+                document.getElementById("emailSpan").innerHTML = "Required";
+                isEmailValid = false;
+            } 
+            else if (!emailExp.test(email)) {
+                document.getElementById("emailSpan").innerHTML = "Must be a valid email";
+                isEmailValid = false;
+            } 
+            else {
+                document.getElementById("emailSpan").innerHTML = "";
+            }
+
+            if (newPassword === "") {
+                document.getElementById("passwordSpan").innerHTML = "Required";
+                isPasswordValid = false;
+            }
+            else if (!passExp.test(newPassword)) {
+                document.getElementById("passwordSpan").innerHTML = "Must be a strong password";
+                isPasswordValid = false;
+            }
+            else {
+                document.getElementById("passwordSpan").innerHTML = "";
+            }
+
+            if (confirmPassword === "") {
+                document.getElementById("confirmSpan").innerHTML = "Required";
+                isConfirmPasswordValid = false;
+            } else if (newPassword !== confirmPassword) {
+                document.getElementById("confirmSpan").innerHTML = "Passwords do not match";
+                isConfirmPasswordValid = false;
+            } else {
+                document.getElementById("confirmSpan").innerHTML = "";
+            }
+
+            document.getElementById("resetButton").disabled = !(isEmailValid && isPasswordValid && isConfirmPasswordValid);
+        }
+
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text"; // Show the password
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            } else {
+                passwordInput.type = "password"; // Hide the password
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            }
+        }
+    </script>
+</body>
+</html>

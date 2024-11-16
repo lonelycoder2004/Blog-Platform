@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Entry Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1c238b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        .input-container {
+            width: 100%;
+            margin: 15px 0;
+            position: relative;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        span {
+            display: block;
+            text-align: left;
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #222ad1;
+            color: #fff;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #103154;
+        }
+    </style>
+</head>
+<body>
+    <form id="blogEntryForm">
+        <h2>Blog Entry</h2>
+
+        <!-- Author Name -->
+        <div class="input-container">
+            <input type="text" placeholder="Author Name" id="authorName" required>
+            <span id="authorNameSpan"></span> <!-- Validation message for author name -->
+        </div>
+
+        <!-- Category -->
+        <div class="input-container">
+            <select id="category" required>
+                <option value="" disabled selected>Select a Category</option>
+                <option value="Technology">Technology</option>
+                <option value="Health">Health</option>
+                <option value="Education">Education</option>
+                <option value="Lifestyle">Lifestyle</option>
+                <!-- Add more categories as needed -->
+            </select>
+            <span id="categorySpan"></span> <!-- Moved below the select field -->
+        </div>
+        
+        <!-- Blog Name -->
+        <div class="input-container">
+            <input type="text" placeholder="Blog Name" id="blogName" required>
+            <span id="blogNameSpan"></span> <!-- Moved below the input field -->
+        </div>
+
+        <!-- Content -->
+        <div class="input-container">
+            <textarea id="content" rows="5" placeholder="Enter your content here..." required></textarea>
+            <span id="contentSpan"></span> <!-- Moved below the textarea -->
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        document.getElementById("blogEntryForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const authorname = document.getElementById("authorName").value;
+            const name = document.getElementById("blogName").value;
+            const category = document.getElementById("category").value;
+            const longdescription = document.getElementById("content").value;
+            var uniquename=localStorage.getItem("name");
+            uniquename = JSON.parse(uniquename)
+
+            const blogData = {
+                authorname, // Include author name in the blog data
+                name,
+                longdescription,
+                category,
+                uniquename
+            };
+
+            // Validate the form
+            const api = "http://localhost:4000/blog/add";
+            // Send data to the server
+            fetch(api, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(blogData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Blog entry submitted successfully!");
+                // Redirect or reset the form here if needed
+                window.location.href = "home.html";
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        });
+
+        // Basic validation function to check for empty fields
+        function validateForm() {
+            const authorName = document.getElementById("authorName").value.trim();
+            const blogName = document.getElementById("blogName").value.trim();
+            const category = document.getElementById("category").value;
+            const content = document.getElementById("content").value.trim();
+
+            document.getElementById("authorNameSpan").innerText = authorName ? "" : "Required";
+            document.getElementById("blogNameSpan").innerText = blogName ? "" : "Required";
+            document.getElementById("categorySpan").innerText = category ? "" : "Required";
+            document.getElementById("contentSpan").innerText = content ? "" : "Required";
+        }
+
+        // Call validateForm on input
+        document.querySelectorAll("input, select, textarea").forEach(element => {
+            element.addEventListener("input", validateForm);
+        });
+    </script>
+</body>
+</html>

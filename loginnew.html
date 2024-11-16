@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color:  #01032b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        .input-container {
+            width: 100%;
+            margin: 15px 0;
+            position: relative;
+        }
+        input[type="email"], input[type="password"] ,input[type="text"]{
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        span {
+            display: block;
+            text-align: left;
+            color: red;
+            font-size: 12px;
+            margin-left: 5px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #222ad1;
+            color: #fff;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #103154;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            pointer-events: auto; /* Ensure clicks are registered on the icon */
+            z-index: 1; /* Keep the icon above the input field */
+        }
+        .additional-links {
+            margin-top: 15px;
+        }
+        .additional-links a {
+            color: #222ad1;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .additional-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <form method="post" id="loginForm">
+        <h2>Login</h2>
+        <div class="input-container">
+            <input type="email" placeholder="Email" id="loginEmail" onfocus="validateLogin()" oninput="validateLogin()">
+            <span id="loginEmailSpan"></span>
+        </div>
+        <div class="input-container">
+            <div style="position: relative;">
+                <input type="password" placeholder="Password" id="loginPassword" onfocus="validateLogin()" oninput="validateLogin()">
+                <span id="loginPasswordSpan"></span>
+                <i class="fa-solid fa-eye-slash toggle-password" id="toggleLoginPassword" onclick="togglePassword('loginPassword', 'toggleLoginPassword')"></i>
+            </div>
+        </div>
+        <button type="submit" id="loginButton" disabled>Login</button>
+        
+        <div class="additional-links">
+            <p><a href="register.html">Sign Up</a> | <a href="reset.html">Reset Password</a></p>
+        </div>
+    </form>
+
+    <script>
+        document.getElementById("loginForm").addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+
+            const data = { email, password };
+            const api = 'http://localhost:4000/user/login';
+
+            fetch(api, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status == true || data.status == 'true') {
+                    alert("Login successful!");
+                    localStorage.setItem('name', JSON.stringify(data.name))
+                    localStorage.setItem('token', JSON.stringify(data.token))
+                    window.location.href="home.html";
+                } else {
+                    alert("Login failed: " + data.msg);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred. Please try again later.");
+            });
+        });
+
+        function validateLogin() {
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+
+            const emailExp = /^([a-zA-Z0-9-_]+)\@([a-zA-Z]+)\.([a-zA-Z]{2,6})(\.[a-zA-Z]{2,5})?$/;
+            const passExp = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@_])[a-zA-Z0-9@_]{8,12}$/;
+
+            let isEmailValid = true;
+            let isPasswordValid = true;
+
+            if (email === "") {
+                document.getElementById("loginEmailSpan").innerHTML = "Required";
+                isEmailValid = false;
+            } else if (!emailExp.test(email)) {
+                document.getElementById("loginEmailSpan").innerHTML = "Must be a valid email";
+                isEmailValid = false;
+            } else {
+                document.getElementById("loginEmailSpan").innerHTML = "";
+            }
+
+            if (password === "") {
+                document.getElementById("loginPasswordSpan").innerHTML = "Required";
+                isPasswordValid = false;
+            } else if (!passExp.test(password)) {
+                document.getElementById("loginPasswordSpan").innerHTML = "Must be a strong password";
+                isPasswordValid = false;
+            } else {
+                document.getElementById("loginPasswordSpan").innerHTML = "";
+            }
+
+            document.getElementById("loginButton").disabled = !(isEmailValid && isPasswordValid);
+        }
+
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text"; // Show the password
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            } else {
+                passwordInput.type = "password"; // Hide the password
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            }
+        }
+    </script>
+</body>
+</html>
